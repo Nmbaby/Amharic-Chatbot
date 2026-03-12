@@ -1,0 +1,1299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Addis AI - Chat Assistant</title>
+    <style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f6f6f6;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Chat Container */
+.chat-container {
+    width: 100%;
+    max-width: 720px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* Header */
+.chat-header {
+    padding: 12px 20px;
+    background: #1f2937;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.header-left h1 {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.header-left p {
+    font-size: 13px;
+    opacity: 0.8;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+.user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.auth-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-login, .btn-signup, .btn-logout {
+    padding: 6px 16px;
+    border: none;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-login {
+    background: transparent;
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-login:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-signup {
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    color: white;
+}
+
+.btn-signup:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
+}
+
+.btn-logout {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fff;
+    font-size: 12px;
+    padding: 4px 12px;
+}
+
+.btn-logout:hover {
+    background: rgba(239, 68, 68, 0.3);
+}
+
+.language-select {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+}
+
+.language-select option {
+    background: #1f2937;
+}
+
+/* Usage Bar */
+.usage-bar {
+    padding: 8px 20px;
+    background: #f9fafb;
+    border-bottom: 1px solid #e5e7eb;
+    display: none;
+}
+
+.usage-bar.visible {
+    display: block;
+}
+
+.usage-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.usage-progress {
+    height: 4px;
+    background: #e5e7eb;
+    border-radius: 2px;
+    margin-top: 6px;
+    overflow: hidden;
+}
+
+.usage-progress-bar {
+    height: 100%;
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    border-radius: 2px;
+    transition: width 0.3s;
+}
+
+.upgrade-link {
+    color: #10a37f;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.upgrade-link:hover {
+    text-decoration: underline;
+}
+
+/* Messages */
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-messages::-webkit-scrollbar {
+    width: 8px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+}
+
+.message {
+    max-width: 75%;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message.user {
+    align-self: flex-end;
+}
+
+.message.assistant {
+    align-self: flex-start;
+}
+
+.message-content {
+    padding: 12px 16px;
+    border-radius: 16px;
+    word-wrap: break-word;
+    line-height: 1.5;
+    font-size: 15px;
+}
+
+.message.user .message-content {
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    color: white;
+    border-radius: 16px 16px 4px 16px;
+}
+
+.message.assistant .message-content {
+    background: #f3f3f3;
+    color: #111;
+    border-radius: 16px 16px 16px 4px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+}
+
+.message-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    margin-left: 4px;
+}
+
+.action-btn {
+    padding: 4px 10px;
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 12px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.action-btn:hover {
+    background: #f3f4f6;
+    color: #111;
+}
+
+.action-btn.playing {
+    color: #10a37f;
+    border-color: #10a37f;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    gap: 4px;
+    padding: 4px 0;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #666;
+    animation: bounce 1.4s infinite ease-in-out;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -0.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -0.16s;
+}
+
+@keyframes bounce {
+    0%, 80%, 100% {
+        transform: scale(0);
+    }
+    40% {
+        transform: scale(1);
+    }
+}
+
+/* Input */
+.chat-input-container {
+    padding: 12px 16px;
+    border-top: 1px solid #e0e0e0;
+    background: white;
+    display: flex;
+    gap: 8px;
+}
+
+.input-wrapper {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-input-container input {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 24px;
+    border: 1px solid #ddd;
+    outline: none;
+    font-size: 15px;
+}
+
+.chat-input-container input:focus {
+    border-color: #10a37f;
+    box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+}
+
+.voice-btn {
+    padding: 10px;
+    background: transparent;
+    border: 1px solid #ddd;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.voice-btn:hover {
+    background: #f3f4f6;
+    border-color: #10a37f;
+}
+
+.voice-btn.recording {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: white;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+    50% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+}
+
+.chat-input-container button {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.chat-input-container button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
+}
+
+.chat-input-container button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Auth Modal */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 32px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.modal-header h2 {
+    font-size: 24px;
+    color: #111;
+    margin-bottom: 8px;
+}
+
+.modal-header p {
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+}
+
+.form-group input:focus {
+    border-color: #10a37f;
+    box-shadow: 0 0 0 3px rgba(16, 163, 127, 0.1);
+}
+
+.error-message {
+    background: #fee2e2;
+    color: #991b1b;
+    padding: 10px;
+    border-radius: 6px;
+    font-size: 13px;
+    margin-bottom: 16px;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 163, 127, 0.3);
+}
+
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.modal-footer {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.modal-footer a {
+    color: #10a37f;
+    font-weight: 600;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.modal-footer a:hover {
+    text-decoration: underline;
+}
+
+/* Voice Modal */
+.voice-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.voice-modal.active {
+    display: flex;
+}
+
+.voice-modal-content {
+    background: white;
+    border-radius: 16px;
+    padding: 32px;
+    text-align: center;
+    max-width: 400px;
+}
+
+.voice-animation {
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10a37f, #4ade80);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    animation: pulse-voice 1.5s infinite;
+}
+
+@keyframes pulse-voice {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(16, 163, 127, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 0 20px rgba(16, 163, 127, 0);
+    }
+}
+
+.voice-modal-content h3 {
+    font-size: 20px;
+    margin-bottom: 8px;
+}
+
+.voice-modal-content p {
+    font-size: 14px;
+    color: #6b7280;
+    margin-bottom: 20px;
+}
+
+.transcript-preview {
+    background: #f3f4f6;
+    padding: 12px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    min-height: 50px;
+    font-size: 14px;
+    font-style: italic;
+}
+
+.voice-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.btn-secondary {
+    padding: 10px 20px;
+    background: transparent;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background: #f3f4f6;
+}
+</style>
+</head>
+<body>
+    <!-- Main Chat Container -->
+    <div class="chat-container">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="header-left">
+                <div>
+                    <h1>🇪🇹 Addis AI</h1>
+                    <p>AI Chat Assistant</p>
+                </div>
+            </div>
+            <div class="header-right">
+                <select class="language-select" id="languageSelect">
+                    <option value="am">አማርኛ</option>
+                    <option value="en">English</option>
+                    <option value="om">Afaan Oromoo</option>
+                    <option value="ti">ትግርኛ</option>
+                </select>
+                
+                <!-- Auth Buttons (shown when not logged in) -->
+                <div class="auth-buttons" id="authButtons">
+                    <button class="btn-login" onclick="showLoginModal()">Login</button>
+                    <button class="btn-signup" onclick="showSignupModal()">Sign Up</button>
+                </div>
+                
+                <!-- User Info (shown when logged in) -->
+                <div class="user-info" id="userInfo" style="display: none;">
+                    <div class="user-avatar" id="userAvatar">👤</div>
+                    <span id="userName">User</span>
+                    <button class="btn-logout" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Usage Bar -->
+        <div class="usage-bar" id="usageBar">
+            <div class="usage-info">
+                <span id="usageText">0 / 10 messages used today</span>
+                <a href="#" class="upgrade-link" onclick="showUpgradeInfo()">Upgrade to Premium</a>
+            </div>
+            <div class="usage-progress">
+                <div class="usage-progress-bar" id="usageProgressBar" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-content">
+                    Welcome to Addis AI! I can help you in Amharic, English, Oromo, and Tigrinya. Please login or sign up to start chatting!
+                </div>
+            </div>
+        </div>
+
+        <!-- Input -->
+        <div class="chat-input-container">
+            <div class="input-wrapper">
+                <button class="voice-btn" id="voiceBtn" onclick="startVoiceInput()" title="Voice input">
+                    🎤
+                </button>
+                <input 
+                    type="text" 
+                    id="messageInput" 
+                    placeholder="Send a message..." 
+                    onkeypress="handleKeyPress(event)"
+                    disabled
+                >
+            </div>
+            <button id="sendButton" onclick="sendMessage()" disabled>Send</button>
+        </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Welcome Back</h2>
+                <p>Login to continue chatting</p>
+            </div>
+            <div id="loginError" class="error-message" style="display: none;"></div>
+            <form onsubmit="handleLogin(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="loginEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="loginPassword" required>
+                </div>
+                <button type="submit" class="btn-primary" id="loginBtn">Login</button>
+            </form>
+            <div class="modal-footer">
+                Don't have an account? <a onclick="switchToSignup()">Sign up</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Modal -->
+    <div class="modal" id="signupModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Create Account</h2>
+                <p>Join Addis AI today</p>
+            </div>
+            <div id="signupError" class="error-message" style="display: none;"></div>
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" id="signupName" required>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signupEmail" required>
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signupPassword" required minlength="6">
+                </div>
+                <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
+            </form>
+            <div class="modal-footer">
+                Already have an account? <a onclick="switchToLogin()">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Voice Modal -->
+    <div class="voice-modal" id="voiceModal">
+        <div class="voice-modal-content">
+            <div class="voice-animation">🎤</div>
+            <h3>Listening...</h3>
+            <p>Speak now in your selected language</p>
+            <div class="transcript-preview" id="transcriptPreview">Waiting for speech...</div>
+            <div class="voice-actions">
+                <button class="btn-secondary" onclick="cancelVoiceInput()">Cancel</button>
+                <button class="btn-primary" onclick="stopVoiceInput()">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+const PROXY_URL = 'http://localhost:3000';
+let conversationHistory = [];
+let isLoading = false;
+let authToken = null;
+let currentUser = null;
+let recognition = null;
+let finalTranscript = '';
+let currentAudio = null;
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    checkAuth();
+});
+
+// ==========================================
+// AUTHENTICATION
+// ==========================================
+
+function checkAuth() {
+    authToken = localStorage.getItem('authToken');
+    currentUser = JSON.parse(localStorage.getItem('user') || 'null');
+    
+    if (authToken && currentUser) {
+        showAuthenticatedUI();
+        fetchUsageStats();
+    } else {
+        showUnauthenticatedUI();
+    }
+}
+
+function showAuthenticatedUI() {
+    document.getElementById('authButtons').style.display = 'none';
+    document.getElementById('userInfo').style.display = 'flex';
+    document.getElementById('userName').textContent = currentUser.name;
+    document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+    document.getElementById('usageBar').classList.add('visible');
+    
+    // Enable input
+    document.getElementById('messageInput').disabled = false;
+    document.getElementById('sendButton').disabled = false;
+    
+    // Update welcome message
+    const chat = document.getElementById('chatMessages');
+    chat.innerHTML = `
+        <div class="message assistant">
+            <div class="message-content">
+                Welcome back, ${currentUser.name}! How can I help you today?
+            </div>
+        </div>
+    `;
+}
+
+function showUnauthenticatedUI() {
+    document.getElementById('authButtons').style.display = 'flex';
+    document.getElementById('userInfo').style.display = 'none';
+    document.getElementById('usageBar').classList.remove('visible');
+    
+    // Disable input
+    document.getElementById('messageInput').disabled = true;
+    document.getElementById('sendButton').disabled = true;
+}
+
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+    const loginBtn = document.getElementById('loginBtn');
+    const errorDiv = document.getElementById('loginError');
+    
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Logging in...';
+    errorDiv.style.display = 'none';
+    
+    try {
+        const res = await fetch(`${PROXY_URL}/api/auth/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.error || 'Login failed');
+        }
+        
+        // Save auth data
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        authToken = data.token;
+        currentUser = data.user;
+        
+        // Close modal and update UI
+        document.getElementById('loginModal').classList.remove('active');
+        showAuthenticatedUI();
+        fetchUsageStats();
+        
+    } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+    } finally {
+        loginBtn.disabled = false;
+        loginBtn.textContent = 'Login';
+    }
+}
+
+async function handleSignup(e) {
+    e.preventDefault();
+    
+    const name = document.getElementById('signupName').value;
+    const email = document.getElementById('signupEmail').value;
+    const password = document.getElementById('signupPassword').value;
+    const signupBtn = document.getElementById('signupBtn');
+    const errorDiv = document.getElementById('signupError');
+    
+    signupBtn.disabled = true;
+    signupBtn.textContent = 'Creating account...';
+    errorDiv.style.display = 'none';
+    
+    try {
+        const res = await fetch(`${PROXY_URL}/api/auth/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, email, password })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            throw new Error(data.error || 'Signup failed');
+        }
+        
+        // Save auth data
+        localStorage.setItem('authToken', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        authToken = data.token;
+        currentUser = data.user;
+        
+        // Close modal and update UI
+        document.getElementById('signupModal').classList.remove('active');
+        showAuthenticatedUI();
+        fetchUsageStats();
+        
+    } catch (error) {
+        errorDiv.textContent = error.message;
+        errorDiv.style.display = 'block';
+    } finally {
+        signupBtn.disabled = false;
+        signupBtn.textContent = 'Create Account';
+    }
+}
+
+function logout() {
+    if (!confirm('Are you sure you want to logout?')) return;
+    
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    authToken = null;
+    currentUser = null;
+    conversationHistory = [];
+    
+    showUnauthenticatedUI();
+    
+    const chat = document.getElementById('chatMessages');
+    chat.innerHTML = `
+        <div class="message assistant">
+            <div class="message-content">
+                You've been logged out. Please login to continue chatting.
+            </div>
+        </div>
+    `;
+}
+
+async function fetchUsageStats() {
+    try {
+        const res = await fetch(`${PROXY_URL}/api/chat/usage`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`
+            }
+        });
+        
+        if (res.ok) {
+            const data = await res.json();
+            updateUsageBar(data.usage);
+        }
+    } catch (error) {
+        console.error('Failed to fetch usage:', error);
+    }
+}
+
+function updateUsageBar(usage) {
+    const usageText = document.getElementById('usageText');
+    const progressBar = document.getElementById('usageProgressBar');
+    
+    usageText.textContent = `${usage.messagesUsed} / ${usage.dailyLimit} messages used today`;
+    progressBar.style.width = `${usage.percentage}%`;
+    
+    // Change color based on usage
+    if (usage.percentage >= 90) {
+        progressBar.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+    } else if (usage.percentage >= 70) {
+        progressBar.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+    } else {
+        progressBar.style.background = 'linear-gradient(135deg, #10a37f, #4ade80)';
+    }
+}
+
+function showLoginModal() {
+    document.getElementById('loginModal').classList.add('active');
+}
+
+function showSignupModal() {
+    document.getElementById('signupModal').classList.add('active');
+}
+
+function switchToSignup() {
+    document.getElementById('loginModal').classList.remove('active');
+    document.getElementById('signupModal').classList.add('active');
+}
+
+function switchToLogin() {
+    document.getElementById('signupModal').classList.remove('active');
+    document.getElementById('loginModal').classList.add('active');
+}
+
+function showUpgradeInfo() {
+    alert('Upgrade to Premium:\n\n✓ Unlimited messages\n✓ Priority support\n✓ Advanced features\n\nContact support for more info!');
+}
+
+// ==========================================
+// CHAT
+// ==========================================
+
+async function sendMessage() {
+    if (isLoading || !authToken) return;
+    
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+    if (!message) return;
+    
+    appendMessage('user', message);
+    input.value = '';
+    showTypingIndicator();
+    isLoading = true;
+    
+    const targetLanguage = document.getElementById('languageSelect').value;
+    
+    try {
+        const res = await fetch(`${PROXY_URL}/api/chat`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({
+                prompt: message,
+                conversation_history: conversationHistory,
+                target_language: targetLanguage,
+                temperature: 0.7
+            })
+        });
+        
+        const data = await res.json();
+        
+        if (!res.ok) {
+            if (res.status === 401) {
+                logout();
+                throw new Error('Session expired. Please login again.');
+            } else if (res.status === 429) {
+                throw new Error(data.error || 'Daily limit reached. Upgrade to Premium for unlimited messages!');
+            }
+            throw new Error(data.error || 'Failed to get response');
+        }
+        
+        const text = data.response_text;
+        conversationHistory.push(
+            { role: 'user', content: message },
+            { role: 'assistant', content: text }
+        );
+        
+        removeTypingIndicator();
+        appendMessage('assistant', text, targetLanguage);
+        
+        // Update usage
+        if (data.usage) {
+            updateUsageBar(data.usage);
+        }
+        
+        // Auto-play TTS
+        playAudio(text, targetLanguage);
+        
+    } catch (e) {
+        removeTypingIndicator();
+        appendMessage('assistant', '⚠️ ' + e.message);
+    } finally {
+        isLoading = false;
+    }
+}
+
+function appendMessage(role, text, language = null) {
+    const chat = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'message ' + role;
+    
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.textContent = text;
+    
+    div.appendChild(content);
+    
+    // Add audio button for assistant messages
+    if (role === 'assistant' && language && !text.includes('⚠️')) {
+        const actions = document.createElement('div');
+        actions.className = 'message-actions';
+        
+        const playBtn = document.createElement('button');
+        playBtn.className = 'action-btn';
+        playBtn.innerHTML = '🔊 Play';
+        playBtn.onclick = () => playAudio(text, language, playBtn);
+        
+        actions.appendChild(playBtn);
+        div.appendChild(actions);
+    }
+    
+    chat.appendChild(div);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+}
+
+function handleKeyPress(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function showTypingIndicator() {
+    const chat = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = 'message assistant typing';
+    div.id = 'typingIndicator';
+    const content = document.createElement('div');
+    content.className = 'message-content';
+    content.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+    div.appendChild(content);
+    chat.appendChild(div);
+    chat.scrollTo({ top: chat.scrollHeight, behavior: 'smooth' });
+}
+
+function removeTypingIndicator() {
+    const ind = document.getElementById('typingIndicator');
+    if (ind) ind.remove();
+}
+
+// ==========================================
+// VOICE & AUDIO
+// ==========================================
+
+async function playAudio(text, language, buttonElement = null) {
+    if (!authToken) return;
+    
+    // Stop current audio
+    if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+        document.querySelectorAll('.action-btn.playing').forEach(btn => {
+            btn.classList.remove('playing');
+            btn.innerHTML = '🔊 Play';
+        });
+    }
+    
+    if (buttonElement) {
+        buttonElement.classList.add('playing');
+        buttonElement.innerHTML = '⏸️ Playing...';
+    }
+    
+    try {
+        const res = await fetch(`${PROXY_URL}/api/tts`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${authToken}`
+            },
+            body: JSON.stringify({ text, language })
+        });
+        
+        if (!res.ok) throw new Error('TTS failed');
+        
+        const data = await res.json();
+        const audioBase64 = data.audio || data.audio_base64 || data.data;
+        
+        if (audioBase64) {
+            const audio = new Audio('data:audio/wav;base64,' + audioBase64);
+            currentAudio = audio;
+            
+            audio.onended = () => {
+                if (buttonElement) {
+                    buttonElement.classList.remove('playing');
+                    buttonElement.innerHTML = '🔊 Play';
+                }
+                currentAudio = null;
+            };
+            
+            await audio.play();
+        }
+    } catch (e) {
+        console.error('TTS error:', e);
+        if (buttonElement) {
+            buttonElement.classList.remove('playing');
+            buttonElement.innerHTML = '🔊 Play';
+        }
+    }
+}
+
+function startVoiceInput() {
+    if (!authToken) {
+        alert('Please login to use voice input');
+        return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    
+    if (!SpeechRecognition) {
+        alert('Voice input not supported in your browser. Please use Chrome, Edge, or Safari.');
+        return;
+    }
+    
+    const targetLanguage = document.getElementById('languageSelect').value;
+    const languageMap = {
+        'am': 'am-ET',
+        'en': 'en-US',
+        'om': 'om-ET',
+        'ti': 'ti-ET'
+    };
+    
+    recognition = new SpeechRecognition();
+    recognition.lang = languageMap[targetLanguage] || 'en-US';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    
+    finalTranscript = '';
+    const transcriptPreview = document.getElementById('transcriptPreview');
+    transcriptPreview.textContent = 'Listening...';
+    
+    recognition.onresult = (event) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i][0].transcript;
+            if (event.results[i].isFinal) {
+                finalTranscript += transcript + ' ';
+            } else {
+                interimTranscript += transcript;
+            }
+        }
+        
+        transcriptPreview.textContent = (finalTranscript + interimTranscript).trim() || 'Listening...';
+    };
+    
+    recognition.onerror = (event) => {
+        transcriptPreview.textContent = 'Error: ' + event.error;
+    };
+    
+    recognition.onend = () => {
+        document.getElementById('voiceBtn').classList.remove('recording');
+    };
+    
+    try {
+        recognition.start();
+        document.getElementById('voiceBtn').classList.add('recording');
+        document.getElementById('voiceModal').classList.add('active');
+    } catch (error) {
+        alert('Could not start voice recognition');
+    }
+}
+
+function stopVoiceInput() {
+    if (recognition) recognition.stop();
+    
+    document.getElementById('voiceModal').classList.remove('active');
+    document.getElementById('voiceBtn').classList.remove('recording');
+    
+    if (finalTranscript.trim()) {
+        const input = document.getElementById('messageInput');
+        input.value = finalTranscript.trim();
+        setTimeout(() => sendMessage(), 300);
+    }
+    
+    finalTranscript = '';
+}
+
+function cancelVoiceInput() {
+    if (recognition) recognition.stop();
+    
+    document.getElementById('voiceModal').classList.remove('active');
+    document.getElementById('voiceBtn').classList.remove('recording');
+    finalTranscript = '';
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const loginModal = document.getElementById('loginModal');
+    const signupModal = document.getElementById('signupModal');
+    const voiceModal = document.getElementById('voiceModal');
+    
+    if (event.target === loginModal) {
+        loginModal.classList.remove('active');
+    }
+    if (event.target === signupModal) {
+        signupModal.classList.remove('active');
+    }
+    if (event.target === voiceModal) {
+        cancelVoiceInput();
+    }
+}
+</script>
+</body>
+</html>
